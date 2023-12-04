@@ -1,0 +1,51 @@
+name: Build and Publish
+on: workflow_dispatch
+
+jobs: 
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v2
+        with:
+          java-version: '21'
+          distribution: temurin
+
+      - name: Set up Gradle
+        uses: gradle/gradle-build-action@v2
+
+      - name: Build and Publish
+        env:
+          MAVEN_URL: ${{ secrets.MAVEN_URL }}
+          MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+          SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
+        run: |
+          ./gradlew build publish
+
+      - name: Get current version
+        id: get_version
+        run: |
+          ./gradlew properties -q | grep "version:" | awk '{print $2}' > version.txt
+          echo VERSION=$(cat version.txt) >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: marvinpinto/action-automatic-releases@v1.2.1
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          automatic_release_tag: ${{ steps.get_version.outputs.VERSION }}
+          prerelease: false
+          draft: false
+
+      - name: Close staging repository # We've made it this far, it all went to plan
+        if: success()
+        env:
+          MAVEN_URL: ${{ secrets.MAVEN_URL }}
+          MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+        run: |
+          ./gradlew closeAndReleaseRepository
