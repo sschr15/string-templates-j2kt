@@ -17,6 +17,9 @@ jobs:
       - name: Set up Gradle
         uses: gradle/gradle-build-action@v2
 
+      - name: Set gradlew permissions
+        run: chmod +x gradlew
+
       - name: Build and Publish
         env:
           MAVEN_URL: ${{ secrets.MAVEN_URL }}
