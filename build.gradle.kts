@@ -52,6 +52,7 @@ signing {
 publishing {
     publications {
         create<MavenPublication>("maven") {
+            from(components["java"])
             artifact(dokkaJar)
             artifact(tasks.kotlinSourcesJar)
 
