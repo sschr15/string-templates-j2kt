@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.plugin.mpp.pm20.util.archivesName
+
 plugins {
     kotlin("jvm") version "1.9.21"
     id("org.jetbrains.dokka") version "1.9.10"
@@ -7,6 +9,7 @@ plugins {
 }
 
 group = "com.sschr15"
+archivesName = "templates-kt"
 version = "1.0.0"
 
 repositories {
@@ -38,6 +41,9 @@ signing {
     if (signingKey != null && signingPassword != null) {
         useInMemoryPgpKeys(signingKey, signingPassword)
         sign(publishing.publications)
+    } else if (System.getenv("CI") == null) {
+        logger.info("Trying to defer to GPG agent for signing.")
+        useGpgCmd()
     } else {
         logger.warn("Signing key or password not found, not signing artifacts.")
     }

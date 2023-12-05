@@ -1,2 +1,2 @@
-rootProject.name = "string-templates-j2kt"
+rootProject.name = "templates-kt"
 
